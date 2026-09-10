@@ -1,0 +1,10 @@
+{
+  "survey_id": "SV_123",
+  "export_params": {
+    "useLabels": true
+  },
+  "response_count": 1,
+  "sha256": "b486cfdcbc6c30c5432a8c65285234ffa271f0cc9ef07094abeb370830db6d52",
+  "retrieved_at": "2026-09-09T17:44:08.554Z",
+  "adapter_version": "qualtrics-adapter/0.1.0"
+}
