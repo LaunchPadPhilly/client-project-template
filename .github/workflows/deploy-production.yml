@@ -37,14 +37,14 @@ permissions:
   id-token: write
 
 env:
-  AWS_REGION: __AWS_REGION__
-  ECR_REPOSITORY: __PROJECT_SLUG__-web
-  ECR_REPOSITORY_MCP: __PROJECT_SLUG__-mcp
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: impacted-ai-web
+  ECR_REPOSITORY_MCP: impacted-ai-mcp
 
   # Production names: <name_prefix>-cluster / -web / -mcp, from infra/environments/production.
-  PROD_CLUSTER: __PROJECT_SLUG__-cluster
-  PROD_WEB_SERVICE: __PROJECT_SLUG__-web
-  PROD_MCP_SERVICE: __PROJECT_SLUG__-mcp
+  PROD_CLUSTER: impacted-ai-cluster
+  PROD_WEB_SERVICE: impacted-ai-web
+  PROD_MCP_SERVICE: impacted-ai-mcp
   PROD_URL: https://__PRIMARY_DOMAIN__
 
 jobs:

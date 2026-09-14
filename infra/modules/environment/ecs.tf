@@ -121,10 +121,13 @@ resource "aws_ecs_service" "web" {
     assign_public_ip = true
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.web.arn
-    container_name   = "web"
-    container_port   = local.web_port
+  dynamic "load_balancer" {
+    for_each = var.enable_https ? [true] : []
+    content {
+      target_group_arn = aws_lb_target_group.web.arn
+      container_name   = "web"
+      container_port   = local.web_port
+    }
   }
 
   # ECS refuses CreateService on a target group not yet associated with a load
@@ -164,10 +167,13 @@ resource "aws_ecs_service" "mcp" {
     assign_public_ip = true
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.mcp.arn
-    container_name   = "mcp"
-    container_port   = local.mcp_port
+  dynamic "load_balancer" {
+    for_each = var.enable_https ? [true] : []
+    content {
+      target_group_arn = aws_lb_target_group.mcp.arn
+      container_name   = "mcp"
+      container_port   = local.mcp_port
+    }
   }
 
   # ECS refuses CreateService on a target group not yet associated with a load

@@ -24,7 +24,7 @@ variable "repository" {
 variable "domain_name" {
   description = "Hostname the ALB certificate is issued for. The registrar CNAME is placed by hand (see infra/README.md)."
   type        = string
-  default     = "uat.__PRIMARY_DOMAIN__"
+  default     = "impacted-uat.launchpadinc.org"
 }
 
 variable "app_secret_name" {
@@ -53,7 +53,7 @@ variable "mcp_secret_keys" {
 variable "db_name" {
   description = "Initial database name. Must match the path segment of DATABASE_URL in the secret."
   type        = string
-  default     = "impacted-ai"
+  default     = "impactedai"
 }
 
 variable "db_engine_version" {

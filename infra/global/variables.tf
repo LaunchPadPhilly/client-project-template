@@ -1,25 +1,25 @@
 variable "aws_region" {
   description = "Region for ECR and the deploy role. Must match the environments' region."
   type        = string
-  default     = "__AWS_REGION__"
+  default     = "us-east-1"
 }
 
 variable "name_prefix" {
   description = "Prefix for every account-level resource this root creates (ECR repos, deploy role). Usually the project slug."
   type        = string
-  default     = "__PROJECT_SLUG__"
+  default     = "impacted-ai"
 }
 
 variable "github_org" {
   description = "GitHub organization (or user) that owns the repository running the deploy workflows."
   type        = string
-  default     = "__GITHUB_ORG__"
+  default     = "LaunchPadPhilly"
 }
 
 variable "github_repo" {
   description = "Repository name (without the org) running the deploy workflows."
   type        = string
-  default     = "__GITHUB_REPO__"
+  default     = "ImpactEd_AI"
 }
 
 variable "github_environments" {
@@ -48,11 +48,11 @@ variable "github_oidc_subject_prefix" {
 
 variable "environment_name_prefixes" {
   description = <<-EOT
-    The `name_prefix` of every environment root (e.g. ["__PROJECT_SLUG__-uat", "__PROJECT_SLUG__"]).
+    The `name_prefix` of every environment root (e.g. ["impacted-ai-uat", "impacted-ai"]).
     Used to scope which task-execution and task roles the deploy role may pass to ECS.
   EOT
   type        = list(string)
-  default     = ["__PROJECT_SLUG__-uat", "__PROJECT_SLUG__"]
+  default     = ["impacted-ai-uat", "impacted-ai"]
 }
 
 variable "ecr_keep_last" {

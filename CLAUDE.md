@@ -58,9 +58,9 @@ promoted from one to the other.
 | | Production | UAT |
 |---|---|---|
 | URL | `https://__PRIMARY_DOMAIN__` | `https://uat.__PRIMARY_DOMAIN__` |
-| Cluster | `__PROJECT_SLUG__-cluster` | `__PROJECT_SLUG__-uat-cluster` |
-| Services | `__PROJECT_SLUG__-web`, `__PROJECT_SLUG__-mcp` | `__PROJECT_SLUG__-uat-web`, `__PROJECT_SLUG__-uat-mcp` |
-| Secret | `prod/__PROJECT_SLUG__/app` | `uat/__PROJECT_SLUG__/app` |
+| Cluster | `impacted-ai-cluster` | `impacted-ai-uat-cluster` |
+| Services | `impacted-ai-web`, `impacted-ai-mcp` | `impacted-ai-uat-web`, `impacted-ai-uat-mcp` |
+| Secret | `prod/impacted-ai/app` | `uat/impacted-ai/app` |
 | Terraform root | `infra/environments/production` | `infra/environments/uat` |
 
 ## Commands

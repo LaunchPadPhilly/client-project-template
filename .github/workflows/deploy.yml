@@ -52,14 +52,14 @@ env:
   # which is exactly the trap that would break the UAT jobs. They live here
   # rather than in `vars`/`secrets` for that reason. Only AWS_ROLE_ARN stays a
   # secret, and it must be present in both environments.
-  AWS_REGION: __AWS_REGION__
-  ECR_REPOSITORY: __PROJECT_SLUG__-web
-  ECR_REPOSITORY_MCP: __PROJECT_SLUG__-mcp
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: impacted-ai-web
+  ECR_REPOSITORY_MCP: impacted-ai-mcp
 
   # UAT names: <name_prefix>-cluster / -web / -mcp, from infra/environments/uat.
-  UAT_CLUSTER: __PROJECT_SLUG__-uat-cluster
-  UAT_WEB_SERVICE: __PROJECT_SLUG__-uat-web
-  UAT_MCP_SERVICE: __PROJECT_SLUG__-uat-mcp
+  UAT_CLUSTER: impacted-ai-uat-cluster
+  UAT_WEB_SERVICE: impacted-ai-uat-web
+  UAT_MCP_SERVICE: impacted-ai-uat-mcp
   UAT_URL: https://uat.__PRIMARY_DOMAIN__
 
 jobs:
