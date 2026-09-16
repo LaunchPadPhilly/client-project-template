@@ -114,8 +114,10 @@ git push origin main
 ```
 
 **EVIDENCE 02.6** — paste `git log --oneline | head -2`.
-**Accept when:** two commits, the top one is yours. The push also starts `ci.yml`; it
-must pass: `gh run list --workflow ci.yml --limit 1`.
+**Accept when:** two commits, the top one is yours. The push starts two workflows.
+`ci.yml` must pass: `gh run list --workflow ci.yml --limit 1`. `deploy.yml` also runs and
+**fails at "Configure AWS credentials"**; that is expected until Plays 06 and 07 exist and
+is not a defect. Paste both run conclusions.
 
 ## Success criteria
 
