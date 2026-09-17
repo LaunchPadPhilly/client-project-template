@@ -100,6 +100,7 @@ The full sequence, including the Google OAuth client and the first-admin bootstr
 - [`infra/README.md`](infra/README.md) — the Terraform runbook and the pipeline's GitHub-side settings.
 - [`SECURITY.md`](SECURITY.md) — the non-negotiable constraints.
 - [`CLAUDE.md`](CLAUDE.md) — conventions for contributors and coding agents.
+- [`Docs/`](Docs/README.md) — Building 21 finance action plan, discovery guide, systems architecture, and workflow automation notes.
 
 ## Adding the client's domain
 
