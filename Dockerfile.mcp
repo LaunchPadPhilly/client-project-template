@@ -64,6 +64,8 @@ COPY src/mcp-server ./src/mcp-server
 COPY src/lib/appConfig.ts ./src/lib/appConfig.ts
 COPY src/lib/server/mcp ./src/lib/server/mcp
 COPY src/lib/server/prisma.ts ./src/lib/server/prisma.ts
+COPY src/lib/server/documents ./src/lib/server/documents
+COPY src/lib/server/connectors ./src/lib/server/connectors
 # Add each connector or domain directory the tools in src/lib/server/mcp/tools.ts import,
 # e.g. `COPY src/lib/server/<connector> ./src/lib/server/<connector>`. tsx resolves imports at
 # runtime, so a missing directory surfaces as ERR_MODULE_NOT_FOUND on the first request, not

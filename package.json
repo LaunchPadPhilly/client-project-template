@@ -23,7 +23,9 @@
 		"db:migrate": "prisma migrate dev",
 		"db:deploy": "prisma migrate deploy",
 		"mcp:dev": "tsx src/mcp-server/index.ts",
-		"template:check": "bash scripts/template-check.sh"
+		"template:check": "bash scripts/template-check.sh",
+		"drive:preflight": "tsx scripts/drive-preflight.ts",
+		"documents:ingest": "tsx scripts/ingest-documents.ts"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.1",

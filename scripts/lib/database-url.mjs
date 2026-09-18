@@ -16,11 +16,33 @@ import { dirname, resolve } from 'node:path';
 const repoRoot = process.env.REPO_ROOT || resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 // pg-connection-string is what the application parses with, so it is the
-// authoritative validity check rather than a lookalike.
+// authoritative validity check rather than a lookalike. It is only a
+// transitive dependency (of "pg", not of this project's package.json
+// directly), and pnpm's strict node_modules layout does not expose a
+// package's transitive dependencies to a require rooted at the repo root —
+// only "pg" itself gets a symlink there. So it must be resolved starting
+// from "pg"'s own resolved location (where "pg-connection-string" is a
+// direct, real dependency and pnpm does expose it), not from this repo's
+// package.json.
 let parse;
 try {
-	parse = createRequire(`${repoRoot}/package.json`)('pg-connection-string').parse;
-} catch {
+	const req = createRequire(`${repoRoot}/package.json`);
+	const pgEntry = req.resolve('pg');
+	parse = createRequire(pgEntry)('pg-connection-string').parse;
+} catch (err) {
+	// This shim is not a substitute: it doesn't even return a `password`
+	// field, so build()'s round-trip check will fail on every password that
+	// needs any encoding at all, in a way that looks identical to an actual
+	// encoding bug. Make that unmistakable rather than letting it masquerade
+	// as one.
+	console.error('');
+	console.error('WARNING: could not load pg-connection-string via "pg" (the parser the');
+	console.error('application actually uses to read DATABASE_URL). Falling back to a naive');
+	console.error('WHATWG URL shim that does not implement password extraction at all.');
+	console.error('Every build/repair round-trip check will now fail, indistinguishably from');
+	console.error('an actual password-encoding bug. Run `pnpm install` and re-check that "pg"');
+	console.error(`is installed. (${err && err.message ? err.message : err})`);
+	console.error('');
 	parse = (s) => {
 		const u = new URL(s.replace(/^postgres(ql)?:/, 'https:'));
 		return { host: u.hostname, port: u.port, database: u.pathname.slice(1) };
@@ -28,6 +50,38 @@ try {
 }
 const RESERVED = /[#?/@[\]:<>"{}|\\^`\s]/;
 const ENCODED = /%[0-9A-Fa-f]{2}/;
+
+// A "%" that is not the first character of a valid %XX escape. A lone "%" is
+// just as unsafe left raw as any other reserved character: pg-connection-string
+// (node_modules/.pnpm/pg-connection-string@2.14.0/node_modules/pg-connection-string/index.js,
+// the parser the application itself uses) treats any such stray "%" anywhere
+// in the connection string as a signal that the whole string needs "fixing up"
+// via `encodeURI(str).replace(/%25(\d\d)/g, '%$1')`. That blanket re-encoding
+// also re-encodes the "%" in every already-correctly-encoded reserved
+// character elsewhere in the password, and the narrow `\d\d` (decimal-only)
+// cleanup only undoes that for the handful of reserved characters whose hex
+// pair happens to be two decimal digits — most (":", "?", "/", "[", "]", "<",
+// ">", "{", "}", "|", "\") encode to a hex pair containing a letter and stay
+// double-encoded. So a raw "%" must always be escaped, exactly like the other
+// reserved characters. It is intentionally NOT folded into RESERVED itself:
+// RESERVED is tested against passwords that are sometimes already fully
+// percent-encoded (the built URL's own password in `parses()`, or an
+// already-good password re-checked by `repair()`), and every legitimate %XX
+// escape necessarily contains a "%" character. Testing the encoded form of
+// "?" (i.e. "%3F") against a RESERVED that includes a bare "%" would flag
+// that valid escape as a raw reserved character surviving, which is false.
+// STRAY_PERCENT instead only matches a "%" that is NOT already the start of a
+// valid escape, so it correctly ignores "%3F" while still catching a genuine
+// unescaped "%".
+const STRAY_PERCENT = /%(?![0-9A-Fa-f]{2})/;
+
+// Shared "does a raw reserved character (including a stray, unescaped "%")
+// survive in this string" test, used everywhere RESERVED alone would have
+// been used: deciding whether a password needs percent-encoding, and
+// confirming that none survived encoding.
+function hasUnescapedReserved(s) {
+	return RESERVED.test(s) || STRAY_PERCENT.test(s);
+}
 
 const lenientParses = (s) => {
 	try {
@@ -64,7 +118,7 @@ const parses = (s) => {
 	const userinfo = s.slice(scheme + 3, at);
 	const colon = userinfo.indexOf(':');
 	const password = colon >= 0 ? userinfo.slice(colon + 1) : '';
-	if (RESERVED.test(password)) return false;
+	if (hasUnescapedReserved(password)) return false;
 	// Exactly one ":" separating host from port.
 	const hostPort = s.slice(at + 1).split('/')[0];
 	return (hostPort.match(/:/g) || []).length <= 1;
@@ -99,7 +153,7 @@ function normalizeEndpoint(endpoint, defaultPort = '5432') {
 // carrying %XX escapes and no raw reserved characters is left alone. One that
 // has both is ambiguous, and guessing would corrupt it.
 function encodePassword(pw) {
-	const hasReserved = RESERVED.test(pw);
+	const hasReserved = hasUnescapedReserved(pw);
     const hasEncoded = ENCODED.test(pw);
 	if (hasReserved && hasEncoded) {
 		console.error('Password contains BOTH %XX escapes and raw reserved characters.');
@@ -266,7 +320,7 @@ function repair() {
 	if (colon >= 0) {
 		const user = userinfo.slice(0, colon);
 		const pass = userinfo.slice(colon + 1);
-		if (RESERVED.test(pass)) {
+		if (hasUnescapedReserved(pass)) {
 			const { password } = encodePassword(pass);
 			fixed = fixed.slice(0, scheme + 3) + user + ':' + password + fixed.slice(fixed.lastIndexOf('@'));
 			applied.push('percent-encoded reserved characters in the password');
@@ -347,7 +401,7 @@ export function diagnoseDatabaseUrl(url) {
 	const colon = userinfo.indexOf(':');
 	if (colon >= 0) {
 		const pass = userinfo.slice(colon + 1);
-		if (RESERVED.test(pass)) {
+		if (hasUnescapedReserved(pass)) {
 			if (ENCODED.test(pass)) {
 				faults.push('password mixes %XX escapes with raw reserved characters (ambiguous; fix by hand)');
 				return { ok: false, faults, summary: summarize(s), repaired: null };

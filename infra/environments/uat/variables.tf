@@ -40,14 +40,17 @@ variable "web_secret_keys" {
     "DATABASE_URL",
     "GOOGLE_ALLOWED_DOMAIN", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI",
     "INITIAL_ADMIN_EMAIL",
-    "MCP_OAUTH_ISSUER_URL", "MCP_OAUTH_SCOPES", "MCP_PUBLIC_URL", "MCP_SERVER_TOKEN",
+    "MCP_OAUTH_ISSUER_URL", "MCP_OAUTH_SCOPES", "MCP_PUBLIC_URL",
   ]
 }
 
 variable "mcp_secret_keys" {
   description = "Secret keys injected into the mcp container. Must include every key the tools in src/lib/server/mcp/tools.ts read."
   type        = list(string)
-  default     = ["DATABASE_URL", "MCP_OAUTH_ISSUER_URL", "MCP_SERVER_TOKEN"]
+  default = [
+    "DATABASE_URL", "MCP_OAUTH_ISSUER_URL",
+    "GOOGLE_DRIVE_SA_KEY_B64", "GOOGLE_DRIVE_FOLDER_ID", "DOCUMENT_SOURCE_KIND",
+  ]
 }
 
 variable "db_name" {

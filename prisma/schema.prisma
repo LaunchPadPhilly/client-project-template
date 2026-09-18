@@ -223,6 +223,85 @@ model McpUserScopeGrant {
   @@index([userId])
 }
 
+/// One configured document source (ADR 0001). `externalRef` is the folder id (Drive)
+/// or bucket+prefix (S3 fallback); `principal` is the identity the source
+/// authenticates as (e.g. a service-account email) — surfaced by document_source_status
+/// so an operator never needs a source-specific special case.
+model DocumentSourceConnection {
+  id                  String             @id @default(cuid())
+  sourceType          DocumentSourceType
+  label               String
+  externalRef         String
+  principal           String
+  lastPreflightStatus String?
+  lastPreflightAt     DateTime?
+  lastSyncStartedAt   DateTime?
+  lastSyncCompletedAt DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  documents           Document[]
+  syncRuns            DocumentSyncRun[]
+
+  @@unique([sourceType, externalRef])
+}
+
+/// sourceType + sourceId is the discriminator that keeps storage source-agnostic: an
+/// S3 document differs from a Drive document only in those two columns.
+model Document {
+  id               String                   @id @default(cuid())
+  connectionId     String
+  sourceType       DocumentSourceType
+  sourceId         String
+  title            String
+  mimeType         String
+  sizeBytes        Int?
+  remoteModifiedAt DateTime?
+  contentHash      String?
+  status           DocumentIngestStatus     @default(PENDING)
+  failureReason    String?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  connection       DocumentSourceConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  chunks           DocumentChunk[]
+
+  @@unique([connectionId, sourceId])
+  @@index([connectionId])
+  @@index([status])
+}
+
+/// No embeddings/pgvector — v1 search is PostgreSQL full-text over `text`, queried with
+/// $queryRaw tagged templates only (see documents_search in src/lib/server/mcp/tools.ts).
+model DocumentChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  ordinal    Int
+  text       String
+  tokenCount Int
+  createdAt  DateTime @default(now())
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, ordinal])
+  @@index([documentId])
+}
+
+/// The queryable record of the three preflight/sync states described in ADR 0001
+/// section 7 — this is what document_source_status reads to answer "is the connector
+/// working?" without ever needing the MCP tool's own error channel as a diagnostic.
+model DocumentSyncRun {
+  id           String                   @id @default(cuid())
+  connectionId String
+  outcome      DocumentSyncOutcome
+  filesSeen    Int                      @default(0)
+  ingested     Int                      @default(0)
+  failed       Int                      @default(0)
+  startedAt    DateTime                 @default(now())
+  completedAt  DateTime?
+  connection   DocumentSourceConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId])
+  @@index([startedAt])
+}
+
 enum UserStatus {
   INVITED
   ACTIVE
@@ -242,6 +321,7 @@ enum RoleName {
 enum McpScope {
   DATA_READ
   REPORTS_READ
+  DOCUMENTS_READ
 }
 
 enum McpAuthorizationRequestStatus {
@@ -250,4 +330,28 @@ enum McpAuthorizationRequestStatus {
   GRANTED
   DENIED
   EXPIRED
+}
+
+enum DocumentSourceType {
+  GOOGLE_DRIVE
+  S3_PREFIX
+}
+
+enum DocumentIngestStatus {
+  PENDING
+  FETCHED
+  PARSED
+  INDEXED
+  FAILED
+  SKIPPED
+}
+
+enum DocumentSyncOutcome {
+  OK
+  NOT_SHARED
+  EMPTY
+  AUTH_FAILED
+  SHARED_DRIVE_MEMBERSHIP_MISSING
+  PARTIAL
+  FAILED
 }
