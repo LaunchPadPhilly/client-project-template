@@ -15,6 +15,31 @@ end-to-end, what is a shell, what is deliberately out of scope and why. Also rec
 decisions Play 13 asks for: the MCP_SERVER_TOKEN choice, which scopes replace
 DATA_READ / REPORTS_READ and the default grant, and who owns deployment, data and UI. -->
 
+## Domain context: Aplos Finance Intelligence
+
+This repository is being shaped around a finance workflow in which Aplos data is exposed
+through a read-only finance MCP and reviewed by Claude for natural-language analysis,
+monthly-close checks, and human-guided decision support.
+
+The operating principle is read-first by default: Claude may read transactions, compare
+actual vs. budget, identify missing information, summarize variances, and prepare a review
+queue, but it must not directly change accounting records without explicit human approval.
+
+The initial scope includes:
+
+- financial Q&A over Aplos data
+- historical spend and trend analysis
+- budget vs. actual review
+- monthly close exception detection
+- uncategorized or incomplete transaction review
+- review-list generation for finance staff
+- optional Ramp-to-Aplos transaction enrichment and routing
+
+The implementation requirements are documented in [`Docs/Aplos/Workflow.md`](Docs/Aplos/Workflow.md).
+Before building this workflow, confirm the exact Aplos data model, the approved read-only
+boundary, the monthly-close rules, the review queue behavior, and the approval/audit
+controls required by the finance team.
+
 ## Human Activation Gate Policy
 
 Specialized agents under `.claude/agents/` are **locked by default**. Before invoking,

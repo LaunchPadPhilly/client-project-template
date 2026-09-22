@@ -11,6 +11,22 @@ playbook is a set of run books, in dependency order, from filling the template's
 placeholders to production promotion. Each play states the evidence to paste to the
 assistant you work with and what "done" means.
 
+## Aplos finance workflow
+
+This repository also supports a finance workflow that connects Aplos data to a read-only
+MCP and lets Claude help with normal finance operations such as:
+
+- transactional and budget analysis
+- actuals vs. forecast and budget comparison
+- monthly-close exception detection
+- uncategorized or incomplete transaction review
+- finance review-list generation before final approval
+- optional Ramp-to-Aplos transaction routing and enrichment
+
+The design intent is intentionally conservative: Claude can read, analyze, summarize, and
+flag issues, but it does not make accounting changes without a human finance decision.
+The detailed requirements and implementation framing are in [`Docs/Aplos/Workflow.md`](Docs/Aplos/Workflow.md).
+
 ## New project setup
 
 Work through this after creating a repository from the template. Each line names the play
@@ -100,7 +116,8 @@ The full sequence, including the Google OAuth client and the first-admin bootstr
 - [`infra/README.md`](infra/README.md) — the Terraform runbook and the pipeline's GitHub-side settings.
 - [`SECURITY.md`](SECURITY.md) — the non-negotiable constraints.
 - [`CLAUDE.md`](CLAUDE.md) — conventions for contributors and coding agents.
-- [`Docs/`](Docs/README.md) — Building 21 finance action plan, discovery guide, systems architecture, and workflow automation notes.
+- [`Docs/Aplos/Workflow.md`](Docs/Aplos/Workflow.md) — the Aplos finance workflow, requirements, and read-first operating model.
+- [`Docs/`](Docs/) — Building 21 finance action plan, discovery guide, systems architecture, and workflow automation notes.
 
 ## Adding the client's domain
 
