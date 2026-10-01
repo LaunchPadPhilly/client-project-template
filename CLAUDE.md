@@ -74,6 +74,9 @@ required PR review enforce policy.
   improvising, and paste the evidence each play asks for.
 - `infra/README.md` — Terraform runbook. **Read before touching any AWS resource.**
 - `SECURITY.md` — non-negotiables.
+- `AWS Setup/` — reference-only phase guides copied from another project (LP Internal AI
+  V1). Never run their commands here; `infra/` and the plays are authoritative. Its
+  README maps each phase to this repo's equivalent.
 
 ## Environments
 

@@ -1,6 +1,17 @@
 # Phase 2 — AWS RDS Postgres + pgvector
 
-> Reference only, copied from `lp-internal-ai-v1` — not elevate215's own setup. See [`project-setup/README.md`](README.md) and [`project-setup/ARCHITECTURE/CURRENT-ARCHITECTURE.md`](ARCHITECTURE/CURRENT-ARCHITECTURE.md) for what elevate215 actually has and the checklist in `CLAUDE.md`'s "AWS / RDS Work" section before doing AWS/RDS work on this repo. **Updated 2026-08-31** — most of the gap noted here has since been closed: `elevate-mcp-db` now has `--deletion-protection`, a dedicated database (`elevate215`), and a least-privilege app role (`elevate215_app`), and its security group is scoped to just the app tier rather than `0.0.0.0/0`. The one thing still genuinely missing is `--storage-encrypted` — not fixable in place, tracked as its own follow-up in `CURRENT-ARCHITECTURE.md`'s gap table.
+> **Reference copy — not this repo's setup.** Copied from the LP Internal AI V1 project. Its
+> instance, database and user names belong to that project; do not run these commands here.
+> See [this folder's README](README.md) for how each phase maps onto this repository.
+>
+> **This repo's equivalent:** Play [08](../playbook/08-uat-bringup.md). RDS is
+> Terraform-managed in `infra/modules/environment/database.tf` and is private, so schema
+> and data work runs as one-off ECS tasks.
+>
+> **What carries over:** decide on deletion protection, storage encryption, a
+> least-privilege app user and a security group scoped to the app tier *at creation*.
+> Storage encryption cannot be turned on in place later. Here, `db_storage_encrypted` and
+> `db_deletion_protection` are Terraform variables.
 
 **Goal:** Provision a managed Postgres 16 instance on RDS with the pgvector extension enabled, an app database, and a least-privilege app user.
 

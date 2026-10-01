@@ -1,6 +1,16 @@
 # Phase 1 — AWS Account + IAM Baseline
 
-> Reference only, copied from `lp-internal-ai-v1` — not elevate215's own setup. See [`project-setup/README.md`](README.md) and [`project-setup/ARCHITECTURE/CURRENT-ARCHITECTURE.md`](ARCHITECTURE/CURRENT-ARCHITECTURE.md) for what elevate215 actually has and the checklist in `CLAUDE.md`'s "AWS / RDS Work" section before doing AWS/RDS work on this repo. Most relevant part of this file: §4 creates the ECS task role as a step *separate* from the execution role — elevate215's task definitions never got that second role, which is why ECS Exec doesn't work there.
+> **Reference copy — not this repo's setup.** Copied from the LP Internal AI V1 project. Its
+> role names, policies and commands belong to that project; do not run them here. See
+> [this folder's README](README.md) for how each phase maps onto this repository.
+>
+> **This repo's equivalent:** Plays [05](../playbook/05-aws-account-prereqs.md) and
+> [06](../playbook/06-terraform-bootstrap-global.md). IAM roles are Terraform-managed in
+> `infra/global` and `infra/modules/environment/ecs.tf`.
+>
+> **What carries over:** §4's point that the ECS *task* role is separate from the
+> *execution* role. Here the task role is optional (`create_task_role`), and
+> `enable_execute_command` is `false`, so ECS Exec needs both changed deliberately.
 
 **Goal:** Get your IAM user configured, CLI working locally, and base service roles created so every subsequent phase can run without touching the root account.
 

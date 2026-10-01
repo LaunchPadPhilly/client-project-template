@@ -1,6 +1,16 @@
 # Phase 4 — Prisma Schema
 
-> Reference only, copied from `lp-internal-ai-v1` — not elevate215's own setup. elevate215 already has its own complete Prisma schema (`School`/`SchoolSnapshot`/`AssessmentResult`/etc., not the `Student`/`Staff`/`Donor*` tables below — different domain) with 10 migrations already applied against Neon, including its own pgvector migration. This phase's one relevant pitfall: `CREATE EXTENSION vector` must exist on the target database before migrating — unconfirmed as of this writing whether that's true for `elevate-mcp-db`. See [`project-setup/ARCHITECTURE/CURRENT-ARCHITECTURE.md`](ARCHITECTURE/CURRENT-ARCHITECTURE.md).
+> **Reference copy — not this repo's setup.** Copied from the LP Internal AI V1 project. The
+> `Student`/`Staff`/`Donor*` tables and `@lp-ai/*` packages below belong to that project's
+> domain; do not run these commands here. See [this folder's README](README.md) for how
+> each phase maps onto this repository.
+>
+> **This repo's equivalent:** `prisma/schema.prisma` and the `database-change` skill.
+> Migrations reach AWS through the pipeline's blocking one-off `prisma migrate deploy`
+> task (Play [10](../playbook/10-uat-activation.md)).
+>
+> **What carries over:** if a migration uses pgvector, `CREATE EXTENSION vector` must be
+> possible on the target database before that migration runs.
 
 **Goal:** Set up the `@lp-ai/lib-db` package with a Prisma schema that ports every table from V0, adds the `document_chunks` pgvector table, and runs the first migration against RDS.
 

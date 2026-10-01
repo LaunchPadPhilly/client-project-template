@@ -1,14 +1,19 @@
-> **⚠️ Foreign reference doc — not this repo.** This is leftover content from an unrelated
-> project ("LP Internal AI", a separate pnpm-workspace monorepo) that was copied into
-> Elevate215 by mistake. Paths, packages (`@lp-ai/*`), the `lp-internal-ai` GCP project,
-> and the Notion meeting-router feature it describes do not exist here — **do not run
-> any command in this file against this repo.** Kept only as background/idea reference
-> for building Elevate215's own Google Sheets connector; see
-> `project-docs/Google-Sheets-Connector-Plan.md` for the actual, reviewed implementation
-> plan for this repo. Analogous to the archived `project-setup/00`–`04-*.md` docs noted
-> in `CLAUDE.md`.
-
 # Phase 5 — Google Connectors (Sheets + Drive)
+
+> **Reference copy — not this repo's setup.** Copied from the LP Internal AI V1 project.
+> Its paths, packages (`@lp-ai/*`), the `lp-internal-ai` GCP project and the Notion
+> meeting-router feature do not exist here; **do not run any command in this file against
+> this repo.** See [this folder's README](README.md) for how each phase maps onto this
+> repository.
+>
+> **This repo's equivalent:** none yet. A Google Sheets connector (for example, for the
+> Central Data workbook) would live under `src/lib/server/<connector>/`. It would load
+> credentials server-side only, be read-only from the MCP side, and add its keys to
+> `.env.example` and the secret key lists. Track access in
+> [`Docs/Building-21/connector-credentials.md`](../Docs/Building-21/connector-credentials.md).
+>
+> **What carries over:** service accounts are deny-by-default, so each Sheet and Drive
+> folder must be shared with the service account explicitly.
 
 **Goal:** Set up Google service-account access, configure the connector environment, run the Sheets and Drive syncs against RDS, and authorize calendar access for the HQ meeting router.
 
@@ -148,4 +153,5 @@ visibility, so transcripts aren't searchable until a human tags them).
 
 ---
 
-**Next:** [06-embeddings-pgvector.md](06-embeddings-pgvector.md)
+**Next:** the source project's Phase 6 (embeddings and pgvector) was not copied into this
+folder.

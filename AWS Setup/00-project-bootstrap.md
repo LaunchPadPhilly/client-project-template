@@ -1,6 +1,12 @@
 # Phase 0 — Project Bootstrap
 
-> Reference only, copied from `lp-internal-ai-v1` — not elevate215's own setup. See [`project-setup/README.md`](README.md) and [`project-setup/ARCHITECTURE/CURRENT-ARCHITECTURE.md`](ARCHITECTURE/CURRENT-ARCHITECTURE.md) for what elevate215 actually has and the checklist in `CLAUDE.md`'s "AWS / RDS Work" section before doing AWS/RDS work on this repo.
+> **Reference copy — not this repo's setup.** Copied from the LP Internal AI V1 project. Its
+> paths, packages and commands belong to that project; do not run them here. See
+> [this folder's README](README.md) for how each phase maps onto this repository.
+>
+> **This repo's equivalent:** Plays [01](../playbook/01-preflight.md),
+> [02](../playbook/02-template-init.md) and [04](../playbook/04-local-development.md).
+> Local values go in ignored `.env.local`, documented by `.env.example`.
 
 **Goal:** Get the monorepo scaffolded, git initialized, and running on any developer's machine with a clean `pnpm install`.
 

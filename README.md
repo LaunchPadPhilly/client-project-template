@@ -118,6 +118,7 @@ The full sequence, including the Google OAuth client and the first-admin bootstr
 - [`CLAUDE.md`](CLAUDE.md) — conventions for contributors and coding agents.
 - [`Docs/Aplos/Workflow.md`](Docs/Aplos/Workflow.md) — the Aplos finance workflow, requirements, and read-first operating model.
 - [`Docs/`](Docs/) — Building 21 finance action plan, discovery guide, systems architecture, and workflow automation notes.
+- [`AWS Setup/`](AWS%20Setup/README.md) — reference-only AWS phase guides from another project, mapped onto this repo's Terraform and plays.
 
 ## Adding the client's domain
 

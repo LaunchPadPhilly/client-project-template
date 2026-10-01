@@ -1,6 +1,16 @@
 # Phase 3 — AWS Secrets Manager + Config Package
 
-> Reference only, copied from `lp-internal-ai-v1` — not elevate215's own setup. See [`project-setup/README.md`](README.md) and [`project-setup/ARCHITECTURE/CURRENT-ARCHITECTURE.md`](ARCHITECTURE/CURRENT-ARCHITECTURE.md) for what elevate215 actually has and the checklist in `CLAUDE.md`'s "AWS / RDS Work" section before doing AWS/RDS work on this repo. elevate215 uses one flat secret (`prod/AppBeta/elevate215`) rather than this doc's per-concern secrets — different shape, same idea. The one gap that matters: whoever runs setup needs `secretsmanager:PutSecretValue`, not just `GetSecretValue` — elevate215's dev IAM user only has the latter, which blocked writing a fixed `PROD_DATABASE_URL` back in.
+> **Reference copy — not this repo's setup.** Copied from the LP Internal AI V1 project. Its
+> per-concern secrets and config package belong to that project; do not run these commands
+> here. See [this folder's README](README.md) for how each phase maps onto this repository.
+>
+> **This repo's equivalent:** Play [09](../playbook/09-uat-secret.md). Each environment
+> uses one flat JSON secret (`uat/__PROJECT_SLUG__/app`, `prod/__PROJECT_SLUG__/app`).
+> The keys ECS injects are listed in `web_secret_keys` / `mcp_secret_keys` in the
+> environment root's `variables.tf`. Terraform manages the secret container, never its value.
+>
+> **What carries over:** whoever populates the secret needs
+> `secretsmanager:PutSecretValue`, not just `GetSecretValue`.
 
 **Goal:** Store all credentials in Secrets Manager, then build the `@lp-ai/lib-config` package so every app and connector loads secrets the same way — Secrets Manager in production, `.env` file locally.
 
