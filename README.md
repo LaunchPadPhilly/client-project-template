@@ -11,6 +11,22 @@ playbook is a set of run books, in dependency order, from filling the template's
 placeholders to production promotion. Each play states the evidence to paste to the
 assistant you work with and what "done" means.
 
+## Aplos finance workflow
+
+This repository also supports a finance workflow that connects Aplos data to a read-only
+MCP and lets Claude help with normal finance operations such as:
+
+- transactional and budget analysis
+- actuals vs. forecast and budget comparison
+- monthly-close exception detection
+- uncategorized or incomplete transaction review
+- finance review-list generation before final approval
+- optional Ramp-to-Aplos transaction routing and enrichment
+
+The design intent is intentionally conservative: Claude can read, analyze, summarize, and
+flag issues, but it does not make accounting changes without a human finance decision.
+The detailed requirements and implementation framing are in [`Docs/Aplos/Workflow.md`](Docs/Aplos/Workflow.md).
+
 ## New project setup
 
 Work through this after creating a repository from the template. Each line names the play
@@ -100,6 +116,9 @@ The full sequence, including the Google OAuth client and the first-admin bootstr
 - [`infra/README.md`](infra/README.md) — the Terraform runbook and the pipeline's GitHub-side settings.
 - [`SECURITY.md`](SECURITY.md) — the non-negotiable constraints.
 - [`CLAUDE.md`](CLAUDE.md) — conventions for contributors and coding agents.
+- [`Docs/Aplos/Workflow.md`](Docs/Aplos/Workflow.md) — the Aplos finance workflow, requirements, and read-first operating model.
+- [`Docs/`](Docs/) — Building 21 finance action plan, discovery guide, systems architecture, and workflow automation notes.
+- [`AWS Setup/`](AWS%20Setup/README.md) — reference-only AWS phase guides from another project, mapped onto this repo's Terraform and plays.
 
 ## Adding the client's domain
 
@@ -108,7 +127,7 @@ The full sequence, including the Google OAuth client and the first-admin bootstr
 3. **Tools:** append to `mcpTools` in `src/lib/server/mcp/tools.ts`. Read-only, Zod-validated, parameterized. Add the directory to `Dockerfile.mcp`'s `COPY` list.
 4. **Pages:** gate a route with `requireScopePage(locals.user, 'REPORTS_READ', url.pathname)` and add its nav link in `src/routes/+layout.svelte`.
 5. **Secrets:** any new env key goes in `.env.example` *and* in `web_secret_keys` / `mcp_secret_keys` in the environment root, or ECS never injects it.
-6. **Connectors** (an external API) live under `src/lib/server/<connector>/`, load credentials server-side only, and are read-only from the MCP side.
+6. **Connectors** (an external API) live under `src/lib/server/<connector>/`, load credentials server-side only, and are read-only from the MCP side. Track what each one needs in [`Docs/Building-21/connector-credentials.md`](Docs/Building-21/connector-credentials.md).
 
 Pull requests: one focused change; schema changes ship with their migration and a note on
 live-data safety; a new env key ships with its `.env.example` entry and key-list entry; a
