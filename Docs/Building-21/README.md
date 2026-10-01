@@ -8,6 +8,7 @@ This folder captures the finance discovery session and turns it into an executab
 - [Discovery interview guide](discovery-interview-guide.md) — preparation standards, required questions, and interview habits.
 - [Systems and MCP architecture](building-21-systems-and-mcp.md) — organizational boundary, source systems, proposed Building 21 MCP, and access needs.
 - [Finance workflows and automation](finance-workflows-and-automation.md) — current-state workflows, automation opportunities, and phased delivery plan.
+- [Connector credentials checklist](connector-credentials.md) — what Aplos, Ramp, Gusto, Green Dot and Wells Fargo each need for access, and status.
 
 ## Working assumptions
 

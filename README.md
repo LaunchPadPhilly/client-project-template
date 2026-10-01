@@ -126,7 +126,7 @@ The full sequence, including the Google OAuth client and the first-admin bootstr
 3. **Tools:** append to `mcpTools` in `src/lib/server/mcp/tools.ts`. Read-only, Zod-validated, parameterized. Add the directory to `Dockerfile.mcp`'s `COPY` list.
 4. **Pages:** gate a route with `requireScopePage(locals.user, 'REPORTS_READ', url.pathname)` and add its nav link in `src/routes/+layout.svelte`.
 5. **Secrets:** any new env key goes in `.env.example` *and* in `web_secret_keys` / `mcp_secret_keys` in the environment root, or ECS never injects it.
-6. **Connectors** (an external API) live under `src/lib/server/<connector>/`, load credentials server-side only, and are read-only from the MCP side.
+6. **Connectors** (an external API) live under `src/lib/server/<connector>/`, load credentials server-side only, and are read-only from the MCP side. Track what each one needs in [`Docs/Building-21/connector-credentials.md`](Docs/Building-21/connector-credentials.md).
 
 Pull requests: one focused change; schema changes ship with their migration and a note on
 live-data safety; a new env key ships with its `.env.example` entry and key-list entry; a
