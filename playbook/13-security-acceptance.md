@@ -73,12 +73,18 @@ Do each and state the result in one line:
    returns 403 (`admin_access_denied` appears in activity).
 3. Grant that user `data:read`, connect an MCP client or use an agent token as them, then
    **revoke the scope**: the next tool call is refused. This proves live intersection.
+   Repeat granting the scope **only through a group** instead of directly, then remove the
+   user from the group: the next call from the same, non-reconnected client is refused the
+   same way (ADR 0002's single most important guarantee).
 4. `/admin?screen=agents`: create and revoke a token; activity shows
    `agent_token_created` and `agent_token_revoked`.
 5. Confirm the raw token was shown exactly once and cannot be viewed again.
+6. **Permission matrix** (ADR 0002): a member of `admin` reaches all five `/admin`
+   screens. A member of `program_staff` — which holds no `SitePermission` — gets 403 on
+   `/admin` entirely and produces `admin_access_denied`, the same as a user in no group.
 
-**EVIDENCE 13.4** — five lines.
-**Accept when:** all five behave as stated.
+**EVIDENCE 13.4** — six lines.
+**Accept when:** all six behave as stated.
 
 ### 5. Record the known gaps (file change)
 
@@ -87,7 +93,7 @@ These were found by reading the code and are **not** fixed by configuration. Add
 
 | Gap | Where | Consequence | Mitigation today |
 |---|---|---|---|
-| `User.status = DISABLED` is not enforced | `src/lib/server/auth/session.ts`, MCP OAuth path | A disabled user keeps a valid 30-day session and can refresh MCP tokens | Revoke all scopes and admin role; delete `AuthSession` rows via a one-off task (Play 14) |
+| `User.status = DISABLED` is not enforced | `src/lib/server/auth/session.ts`, MCP OAuth path | A disabled user keeps a valid 30-day session and can refresh MCP tokens | Remove from all groups, revoke direct scopes, delete `AuthSession` rows via a one-off task (Play 14) |
 | Single-token revoke leaves the refresh token alive | `/admin/users/[id]` | Client refreshes within the hour | Use "Revoke all" or disable the OAuth client |
 | Rate limiting keys on the ALB address | no `ADDRESS_HEADER` in the task env | All clients share one bucket for register/authorize/revoke | Add `ADDRESS_HEADER=X-Forwarded-For` and `XFF_DEPTH=1` to the web container environment in Terraform |
 | No anti-clickjacking / HSTS / CSP headers | `hooks.server.ts` | Consent page could be framed | Add headers in `handle` |
@@ -95,13 +101,13 @@ These were found by reading the code and are **not** fixed by configuration. Add
 | Prisma TLS uses `rejectUnauthorized: false` | `src/lib/server/prisma.ts` | Encrypted but unauthenticated DB connection inside the VPC | Set `db_ca_cert_identifier` and verify |
 | ECR `scan_on_push = false`, tags mutable | `infra/global/main.tf` | No vulnerability scan, tags could be overwritten | Enable scanning; consider immutable tags |
 | Terraform image-pin gate is a `check` block | `infra/modules/environment/ecs.tf` | Activation with unpinned images only warns | The evidence rule in Play 10 step 3 is the real gate |
-| `INITIAL_ADMIN_EMAIL` compare is case-sensitive | Google callback | A capitalized value silently disables bootstrap | Use lowercase |
+| ~~`INITIAL_ADMIN_EMAIL` compare is case-sensitive~~ — closed by ADR 0002 | Google callback (`isInitialAdminEmail`) | Was: a capitalized value silently disabled bootstrap | Both sides are lowercased before comparison |
 
 Also record: the `MCP_SERVER_TOKEN` decision (Option A or B), which scopes replace
 `DATA_READ`/`REPORTS_READ`, the default grant, and who owns deployment, data and UI.
 
 ```bash
-git add CLAUDE.md && git commit -m "docs: record security acceptance and known gaps" && git push origin main
+git add CLAUDE.md && git commit -m "docs: record security acceptance and known gaps" && git push origin uat
 git log --oneline | head -1
 ```
 

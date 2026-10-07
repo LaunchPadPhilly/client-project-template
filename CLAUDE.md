@@ -72,6 +72,7 @@ promoted from one to the other.
 - `pnpm run test` — **not a test suite**: environment/DB diagnostic. Validates `DATABASE_URL`'s structure (shared rules with `scripts/fix-secret-database-url.sh`) before connecting.
 - `pnpm run db:deploy` — apply committed migrations. `db:migrate` is `prisma migrate dev`, only for authoring against a database you own. After schema edits: `db:format`, `db:validate`, `db:generate`.
 - `pnpm run mcp:dev` — standalone MCP server on port 3001, matching the deployed two-service shape.
+- `pnpm run documents:ingest [-- --dry-run | --force] [--verbose]` — incremental document sync (new/updated files only; folder structure recorded; vanished files marked removed). Deployed, it runs hourly via EventBridge Scheduler in UAT (`infra/modules/environment/ingest-schedule.tf`, never `--force`; Play 14 §L) or by hand as a one-off ECS task on the MCP image; runs never overlap (`ALREADY_RUNNING`). The `document_source_changes` MCP tool does the same diff read-only.
 - `pnpm run template:check` — zero-hit gate for placeholders, stray identifiers and email addresses.
 - `./scripts/smoke-test.sh <base-url> [--skip-redirect] [--db-check <path>]` — the pipeline's promotion gate.
 
@@ -88,6 +89,13 @@ contract).
 - `src/lib/server/mcp/handler.ts` is the shared MCP protocol/auth implementation; it
   imports no domain code and reads env through `process.env` (never `$env`, which the
   standalone process cannot resolve). Tools are the list in `src/lib/server/mcp/tools.ts`.
+  A tool returns JSON (one text block) unless it returns `richToolResult(...)`, which
+  `document_visuals` uses to send images. Both entry points pass `mcpInstructions` to
+  `createMcpHandler`. The server instructions tell the client to cite the source under
+  each claim with a verbatim quote, and to ask for the topic and the cohorts/programs
+  (`chart_filter_options`, then a numbered list, then `chart_data`) before charting results.
+  Power BI and Qualtrics links are never ingested and are stripped at read time
+  (`src/lib/server/documents/links.ts`); every other embedded link is kept.
   `src/routes/api/mcp/+server.ts` is a same-origin fallback; production-equivalent MCP runs
   from `src/mcp-server/index.ts` on port 3001 and serves only `/health` and `/api/mcp`.
   `Dockerfile.mcp` runs through `tsx` and must `COPY` every directory the tools import.
@@ -96,13 +104,25 @@ contract).
 - **MCP authorization** accepts three principals: a scoped `AgentToken`, a user
   `McpAccessToken` from the OAuth flow, or the legacy `MCP_SERVER_TOKEN` (unrestricted;
   see Play 02 step 4 for the required decision). For OAuth tokens the *effective* scope is
-  computed live as the intersection of the token's scopes and the user's active
-  `McpUserScopeGrant`s, so revocation applies on the next request. Tools register
-  unconditionally; `guardedToolResult` is the gate.
+  computed live in `getActiveScopes` (`src/lib/server/mcp/scopes.ts`) as the intersection
+  of the token's scopes and the **union** of the user's active `McpUserScopeGrant`s and any
+  `McpScope` granted through an active `GroupMembership`, so revocation (direct or via a
+  group) applies on the next request. Tools register unconditionally; `guardedToolResult`
+  is the gate. This union must never be cached.
 - Scopes are the `McpScope` enum plus one map in `src/lib/server/mcp/scopes.ts`. Adding a
   scope is those two edits (plus a migration); the admin UI and discovery follow.
-- Admin is one `/admin` route with `?screen=agents|clients|activity|users`; only
-  `/admin/users/[id]` is a separate route.
+- Site-management capability is a deliberately separate `SitePermission` enum
+  (`USERS_MANAGE`, `GROUPS_MANAGE`, `AGENTS_MANAGE`, `CLIENTS_MANAGE`, `ACTIVITY_READ`),
+  never wire-mapped and never added to `allScopes` — it must not reach OAuth discovery or
+  `/mcp/consent`. Its only source is an active `GroupMembership` on a `Group` holding a
+  `GroupPermissionGrant`; there is no per-user permission grant. `Group.isSystem` marks the
+  protected `admin` group (undeletable, its `GROUPS_MANAGE`/`USERS_MANAGE` grants
+  irrevocable, never left with zero active members — guarded both in
+  `src/routes/admin/+page.server.ts` and by two Postgres triggers created in the
+  `add_group_permissions` migration). See `docs/decisions/0002-group-based-access-control.md`.
+- Admin is one `/admin` route with `?screen=agents|clients|activity|users|groups`; only
+  `/admin/users/[id]` is a separate route. `/admin` itself admits any user holding at least
+  one `SitePermission`; each screen and action checks its own.
 - Svelte 5 runes mode is forced in `vite.config.ts` (there is no `svelte.config.js`):
   `$props`, `$state`, `$derived`, `$effect`, event properties. No legacy syntax.
 - `vite.config.ts` disables SvelteKit's origin check because standards-compliant OAuth
@@ -137,10 +157,11 @@ and one per environment copied from `environments/example`.
 
 ## CI/CD Pipeline
 
-`deploy.yml` on push to `main`: `build → deploy-uat → smoke-test-uat`, then **stops**.
-`deploy-production.yml` is `workflow_dispatch` only and promotes an already-built SHA,
-refusing any SHA not in ECR. Both images are built once and promoted unchanged. Do not
-chain production onto the push pipeline.
+`deploy.yml` on push to `uat`: `build → deploy-uat → smoke-test-uat`, then **stops**.
+`main` is not a deploy trigger; it is the reviewed, protected branch. Feature work merges
+to `uat` to reach the UAT pipeline; `deploy-production.yml` is `workflow_dispatch` only and
+promotes an already-built SHA, refusing any SHA not in ECR. Both images are built once and
+promoted unchanged. Do not chain production onto the push pipeline.
 
 In each environment: render both task definitions, run `prisma migrate deploy` as a
 **blocking one-off `run-task`** (nonzero exit fails the workflow), then roll out both

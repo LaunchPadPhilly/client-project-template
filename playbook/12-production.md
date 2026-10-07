@@ -121,10 +121,11 @@ Then:
 ```bash
 git add infra/environments/production
 git commit -m "infra: add the production environment root, activated on <short sha>"
-git push origin main
+git push origin uat
 ```
 
-Note: this push deploys to **UAT** again (that is the design). Production is unaffected.
+Note: this push deploys to **UAT** again (that is the design — `deploy.yml` triggers on
+push to `uat`). Production is unaffected; it only ever moves via `deploy-production.yml`.
 
 **EVIDENCE 12.19** — one-line admin statement and `git log --oneline | head -1`.
 

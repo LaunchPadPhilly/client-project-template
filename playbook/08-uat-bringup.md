@@ -122,7 +122,7 @@ returns `503` (TLS works, no targets yet — expected).
 ```bash
 git add infra/environments/uat
 git commit -m "infra: add the UAT environment root"
-git push origin main
+git push origin uat
 ```
 
 **EVIDENCE 08.8** — paste `git log --oneline | head -1`.

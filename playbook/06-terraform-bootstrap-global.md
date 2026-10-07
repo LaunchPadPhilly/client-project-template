@@ -112,6 +112,7 @@ git status --porcelain
 **EVIDENCE 06.8** — paste it.
 **Accept when:** empty, or only `infra/global/variables.tf` which you then commit and push.
 
+
 ## Success criteria
 
 - [ ] 06.1–06.8 accepted
