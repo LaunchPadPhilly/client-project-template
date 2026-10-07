@@ -107,10 +107,16 @@ Two deprecation warnings about `csrf.checkOrigin` are expected and are not error
 
 ### 6. Commit
 
+`deploy.yml` triggers only on push to the `uat` branch (not `main` — `main` is the
+reviewed, protected branch; `uat` is the permanent deploy-trigger branch). Rename the
+default branch before the first push so every later play's `git push origin uat` is this
+same branch:
+
 ```bash
 git add -A
 git commit -m "chore: initialize template for <slug>"
-git push origin main
+git branch -m main uat
+git push -u origin uat
 ```
 
 **EVIDENCE 02.6** — paste `git log --oneline | head -2`.

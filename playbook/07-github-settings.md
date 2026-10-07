@@ -32,21 +32,29 @@ gh secret list --repo <org>/<repo>
 **EVIDENCE 07.2** — paste the list.
 **Accept when:** `AWS_ROLE_ARN` appears with no environment restriction.
 
-### 3. Branch protection on `main`
+### 3. Branch protection on `uat` (and `main`)
 
-Require one approving review and the `check-and-build` status check. Do **not** add a
-"required deployments" rule that names `Production`: production deploys only after merge,
-so that rule makes merging impossible.
+`uat` — not `main` — is the permanent deploy-trigger branch: a push to it runs
+`deploy.yml` (`build → deploy-uat → smoke-test-uat`). Because a merge to `uat` now moves
+real infrastructure, it deserves at least the same protection as `main`: one approving
+review and the `check-and-build` status check. Do **not** add a "required deployments"
+rule that names `Production` on either branch: production deploys only after merge, so
+that rule makes merging impossible.
 
 ```bash
-gh api repos/<org>/<repo>/branches/main/protection 2>/dev/null | jq '{reviews:.required_pull_request_reviews.required_approving_review_count, checks:.required_status_checks.contexts, deployments:.required_deployments}' || echo "no branch protection yet"
+for b in main uat; do
+  echo "== $b =="
+  gh api repos/<org>/<repo>/branches/$b/protection 2>/dev/null | jq '{reviews:.required_pull_request_reviews.required_approving_review_count, checks:.required_status_checks.contexts, deployments:.required_deployments}' || echo "no branch protection yet"
+done
 ```
 
 If the plan offers rulesets instead, configure the equivalent in Settings → Rules and paste
 a one-line description.
 
-**EVIDENCE 07.3** — paste the output.
-**Accept when:** `deployments` is `null` or absent, reviews ≥ 1.
+**EVIDENCE 07.3** — paste the output for both branches.
+**Accept when:** `deployments` is `null` or absent and reviews ≥ 1 on **both** `main` and
+`uat`. If `uat` has no protection at all, flag it: an unprotected branch that triggers a
+real deploy on every push is a bigger risk than an unprotected `main`.
 
 ### 4. Optional: required reviewers on Production
 

@@ -10,7 +10,7 @@ prints the promotion command; this proves the release path a developer will use 
 ### 1. Watch the run
 
 ```bash
-RUN_ID="$(gh run list --workflow deploy.yml --branch main --limit 1 --json databaseId --jq '.[0].databaseId')"
+RUN_ID="$(gh run list --workflow deploy.yml --branch uat --limit 1 --json databaseId --jq '.[0].databaseId')"
 gh run watch "$RUN_ID" --exit-status; echo "watch exit: $?"
 gh run view "$RUN_ID" --json headSha,conclusion,jobs --jq '{sha:.headSha, conclusion, jobs:[.jobs[]|{name,conclusion}]}'
 ```
@@ -49,7 +49,7 @@ In the chat, in your own words, state: (a) what triggers a UAT deploy, (b) why p
 never deploys from `deploy.yml`, (c) what the production workflow refuses.
 
 **EVIDENCE 11.4**
-**Accept when:** (a) push to `main` or manual dispatch; (b) it is a separate
+**Accept when:** (a) push to `uat` (not `main`) or manual dispatch; (b) it is a separate
 `workflow_dispatch` workflow because environment approval gates do not exist on some
 GitHub plans; (c) any SHA not already present in both ECR repositories.
 

@@ -16,9 +16,9 @@ migration, and "updates" services that still have desired count 0), `smoke-test-
 ### 1. Trigger the pipeline
 
 ```bash
-gh workflow run deploy.yml --ref main
+gh workflow run deploy.yml --ref uat
 sleep 20
-RUN_ID="$(gh run list --workflow deploy.yml --branch main --limit 1 --json databaseId --jq '.[0].databaseId')"
+RUN_ID="$(gh run list --workflow deploy.yml --branch uat --limit 1 --json databaseId --jq '.[0].databaseId')"
 gh run watch "$RUN_ID" --exit-status; echo "watch exit: $?"
 gh run view "$RUN_ID" --json headSha,jobs --jq '{sha:.headSha, jobs:[.jobs[]|{name,conclusion}]}'
 ```
@@ -105,15 +105,19 @@ curl -s https://uat.<domain>/.well-known/oauth-protected-resource | jq .
 ### 5. First admin in UAT
 
 In the browser: `https://uat.<domain>`, sign in as `INITIAL_ADMIN_EMAIL` (first-ever login
-of that account in this environment). Confirm `/admin?screen=users` shows you as Admin
-with every scope. Create an agent token with `data:read`, call `service_status` as in
-Play 04 step 5 against `https://uat.<domain>/api/mcp`, revoke it, confirm 401.
+of that account in this environment). Since ADR 0002, the first admin lands in the
+protected `admin` group (not a role row) and keeps their direct all-scopes MCP
+grant from bootstrap. Confirm `/admin?screen=users` shows you as a member of
+Admin with every scope. Create an agent token with `data:read`, call
+`service_status` as in Play 04 step 5 against `https://uat.<domain>/api/mcp`, revoke it,
+confirm 401.
 
-Then open `/admin?screen=activity` and find the `bootstrap_initial_admin` event.
+Then open `/admin?screen=activity` and find both the `bootstrap_initial_admin` event (the
+scope grant) and the `bootstrap_admin_self_heal` event (the group membership) for your user.
 
 **EVIDENCE 10.6** — paste: the one-line admin statement, the `"status":"ok"` JSON, the
-`401` status line, and a one-line statement that the activity screen lists
-`bootstrap_initial_admin` for your user.
+`401` status line, and a one-line statement that the activity screen lists both
+`bootstrap_initial_admin` and `bootstrap_admin_self_heal` for your user.
 **Accept when:** all four present.
 
 ### 6. Commit the pins
@@ -121,7 +125,7 @@ Then open `/admin?screen=activity` and find the `bootstrap_initial_admin` event.
 ```bash
 git add infra/environments/uat/terraform.tfvars
 git commit -m "infra(uat): activate services on <short sha>"
-git push origin main
+git push origin uat
 ```
 
 This push starts `deploy.yml` again; that is Play 11.
