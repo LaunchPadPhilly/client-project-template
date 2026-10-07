@@ -41,7 +41,8 @@ umask 077; F="$(mktemp /tmp/app-secret.XXXXXX)"
 aws secretsmanager get-secret-value --secret-id uat/<slug>/app --query SecretString --output text > "$F"
 "${EDITOR:-vi}" "$F"                          # edit; never replace the object with a partial one
 jq 'keys' "$F"                                # names only
-aws secretsmanager put-secret-value --secret-id uat/<slug>/app --secret-string "file://$F" --query VersionStages && rm -f "$F"
+WINPATH="$(cygpath -m "$F")"                  # Git Bash on Windows only — see note below
+aws secretsmanager put-secret-value --secret-id uat/<slug>/app --secret-string "file://$WINPATH" --query VersionStages && rm -f "$F"
 for s in <slug>-uat-web <slug>-uat-mcp; do
   aws ecs update-service --cluster <slug>-uat-cluster --service "$s" --force-new-deployment --query 'service.serviceName' --output text
 done
@@ -50,6 +51,14 @@ aws ecs wait services-stable --cluster <slug>-uat-cluster --services <slug>-uat-
 
 ECS resolves secrets at task start; without the forced redeploy of **both** services the
 old value stays live and a green smoke test proves nothing.
+
+**Windows/Git Bash gotcha:** `file://$F` with the raw `/tmp/...` path fails with
+`Unable to load paramfile ... No such file or directory`, even though the file is right
+there. The AWS CLI here is a native Windows Python executable, not an MSYS-aware one — it
+never understood Git Bash's `/tmp` alias in the first place, so `MSYS_NO_PATHCONV=1` does
+**not** fix this one (there was never any path translation to disable). `cygpath -m`
+converts to a real Windows path (`C:/Users/.../AppData/Local/Temp/...`) that both Git
+Bash and the native `aws.exe` agree on.
 
 **EVIDENCE 14.C** — key list, `VersionStages`, `STABLE`.
 **Accept when:** keys unchanged (or the intended addition, which must also be added to
@@ -70,6 +79,56 @@ in the flow above.
 
 Then force-redeploy both services (section C). **EVIDENCE 14.D** — the dry-run diagnosis
 and `STABLE`.
+
+**`repair` only checks the string's shape (encoding, port format) — it cannot tell you the
+password itself is stale.** RDS rotates a managed master password on its own schedule with
+no warning, and `repair` will happily report `Already well-formed; nothing to change` on a
+`DATABASE_URL` holding a password Postgres no longer accepts. The actual symptom is both
+`web` and `mcp` logging the same error on completely unrelated requests:
+
+```
+PrismaClientKnownRequestError: ... Authentication failed against the database server,
+the provided database credentials for `app_admin` are not valid
+code: 'P1000'
+```
+
+Confirm it is a rotation (not something else) before touching the secret, by comparing the
+password actually stored against RDS's current managed credential — safe to run, it only
+ever prints short hashes and a boolean, never either password:
+
+```bash
+F2="$(mktemp /tmp/compare-pw.XXXXXX.js)"
+cat > "$F2" <<'EOF'
+const { execSync } = require('node:child_process');
+const crypto = require('node:crypto');
+function aws(id) { return JSON.parse(execSync(`aws secretsmanager get-secret-value --secret-id "${id}" --query SecretString --output text`).toString()); }
+function hash(s) { return crypto.createHash('sha256').update(s).digest('hex').slice(0, 12); }
+const appSecret = aws('uat/<slug>/app');
+const url = new URL(appSecret.DATABASE_URL);
+const appPw = decodeURIComponent(url.password);
+const rdsSecretArn = execSync(`aws rds describe-db-instances --db-instance-identifier <slug>-uat-db --query "DBInstances[0].MasterUserSecret.SecretArn" --output text`).toString().trim();
+const rdsPw = aws(rdsSecretArn).password;
+console.log('MATCH:', appPw === rdsPw);
+EOF
+node "$F2"
+```
+
+If that prints `MATCH: false`, the fix is the same rebuild-from-RDS flow as section C's
+rotation note, run against the **current** secret (not the template, which would wipe every
+other key):
+
+```bash
+umask 077; F="$(mktemp /tmp/uat-secret-fix.XXXXXX)"
+aws secretsmanager get-secret-value --secret-id uat/<slug>/app --query SecretString --output text > "$F"
+./scripts/fix-secret-database-url.sh build --env uat --from-rds-secret --merge-into "$F"
+WINPATH="$(cygpath -m "$F")"
+aws secretsmanager put-secret-value --secret-id uat/<slug>/app --secret-string "file://$WINPATH" --query VersionStages && rm -f "$F"
+```
+
+Then force-redeploy **both** services (section C) — this has broken sign-in, sign-out, and
+every MCP tool call simultaneously every time it has happened, since `web` and `mcp` share
+the one `DATABASE_URL`. Re-run the compare script after redeploying; `MATCH: true` is the
+actual proof, not just a clean deploy.
 
 ## E. Run a schema migration or a one-off command inside the VPC
 
@@ -138,6 +197,14 @@ public IPv4 addresses ≈ $15/mo, plus logs and storage.
 3. `aws ecs describe-services ... --query 'services[0].events[:10]'` for circuit-breaker
    rollbacks and `CannotPullContainerError`.
 4. `/api/health` is liveness only; it does not touch the database.
+
+**The ALB is public, and internet scanners probe it constantly** — `web`'s log is never
+clean. `[404] GET /.env`, `[404] GET /owa/auth/x.js`, and a stray `[405] POST /` with "No
+form actions exist for this page" (1 second after a `/.env` probe) are routine bot noise,
+not a real error, even though the 405 looks alarming out of context. Every form in this app that submits `POST` points at a real action path
+(`/api/auth/logout`, `/admin?/...`, etc.); a 405 at the bare `/` is never one of them.
+Correlate by exact timestamp against what a human actually did before concluding a log
+line is the bug.
 
 ## J. Recover lost state
 

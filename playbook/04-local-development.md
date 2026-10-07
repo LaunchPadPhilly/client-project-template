@@ -107,8 +107,15 @@ Admin; the JSON response of the first curl; the status line of the second.
 ### 6. Pre-push gates
 
 ```bash
-pnpm run db:validate && pnpm run check && pnpm run build && BUILD_TARGET=docker pnpm run build && echo GATES_OK
+pnpm run db:validate && pnpm run check \
+  && DATABASE_URL="postgresql://ci:ci@localhost:5432/ci" pnpm run build \
+  && DATABASE_URL="postgresql://ci:ci@localhost:5432/ci" BUILD_TARGET=docker pnpm run build \
+  && echo GATES_OK
 ```
+
+Both `build` invocations need that placeholder even with a fully correct `.env.local` —
+see the failure-mode row below, it is not optional here the way it is for `db:validate`/
+`check`/`dev`.
 
 **EVIDENCE 04.6** — paste the last line.
 **Accept when:** `GATES_OK`.
@@ -122,7 +129,8 @@ pnpm run db:validate && pnpm run check && pnpm run build && BUILD_TARGET=docker 
 
 | Symptom | Cause / fix |
 |---|---|
-| `DATABASE_URL is required` | Not in the repository root, or `.env.local` missing. All loaders use the relative path. |
+| `DATABASE_URL is required` (from `dev`, `check`, `db:validate`, or any script) | Not in the repository root, or `.env.local` missing. All loaders use the relative path. |
+| `DATABASE_URL is required` **specifically from `pnpm run build`** (plain or `BUILD_TARGET=docker`), even with a correct `.env.local` | Different cause from the row above — this is not a missing-file problem. SvelteKit's postbuild "analyse" step forks a subprocess that imports server modules directly, bypassing `hooks.server.ts` (the file that explicitly loads `.env.local` into `process.env`). It only ever sees a real shell environment variable. Prefix the build command itself: `DATABASE_URL="postgresql://ci:ci@localhost:5432/ci" pnpm run build` — a placeholder is fine, nothing actually connects during a build (`ci.yml` does the same thing). |
 | `pnpm run test` reports a missing key | Every uncommented key in `.env.example` is required, including `PORT`/`HOST`. |
 | `redirect_uri_mismatch` | Console URI and `GOOGLE_REDIRECT_URI` differ. |
 | Rejected after Google consent | Domain not in `GOOGLE_ALLOWED_DOMAIN`, or consumer Gmail. |
