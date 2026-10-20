@@ -5,7 +5,7 @@ description: Standard review rubric and output format. Used by the reviewer agen
 
 # Review a PR
 
-Read the full diff (`git diff main...HEAD`) and open every touched file in context.
+Read the full diff (`git diff uat...HEAD`) and open every touched file in context.
 
 Rubric, in order: **Requirements** (acceptance criteria met, nothing extra) ·
 **Correctness** (edge cases, error handling, concurrency) · **Security** (`SECURITY.md`
