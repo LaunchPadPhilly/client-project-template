@@ -13,7 +13,7 @@ Activation Gate Policy are in the root `CLAUDE.md`.
 LOCKED BY DEFAULT. Follow the `activation-gate` skill with this evidence:
 
 ```bash
-git diff main...HEAD --stat && git diff main...HEAD
+git diff uat...HEAD --stat && git diff uat...HEAD
 pnpm run db:validate && pnpm run check && pnpm run build
 ```
 

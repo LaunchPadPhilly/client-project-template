@@ -14,7 +14,7 @@ LOCKED BY DEFAULT. Follow the `activation-gate` skill with this evidence:
 
 ```bash
 pnpm audit --prod
-git diff main...HEAD --stat && git diff main...HEAD
+git diff uat...HEAD --stat && git diff uat...HEAD
 gitleaks git --no-banner 2>/dev/null || echo "gitleaks not installed"
 ```
 

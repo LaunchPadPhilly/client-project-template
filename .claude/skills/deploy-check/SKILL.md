@@ -5,7 +5,7 @@ description: Pre-deploy and post-deploy checklist for the build-once / promote-u
 
 # Deploy check
 
-## Before merging to main
+## Before merging to uat
 
 - `pnpm run db:validate && pnpm run check && pnpm run build && BUILD_TARGET=docker pnpm run build` pass.
 - New env keys are in `.env.example` **and** in `web_secret_keys` / `mcp_secret_keys`, and
@@ -16,7 +16,7 @@ description: Pre-deploy and post-deploy checklist for the build-once / promote-u
 - Rollback considered: previous SHA still in ECR; schema change is forward-compatible.
 - MCP tool definitions changed? Release note tells connected clients to reconnect.
 
-## UAT (automatic on push to main)
+## UAT (automatic on push to uat — not main)
 
 Watch `deploy.yml`; require `build`, `deploy-uat`, `smoke-test-uat` all green. Read the
 image SHA from the run summary.

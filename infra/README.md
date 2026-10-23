@@ -72,7 +72,7 @@ Three applies, each a gate. `terraform.tfvars` documents the flags.
 
 ## Deploys
 
-`deploy.yml` on push to `main`: `build → deploy-uat → smoke-test-uat`, and stops.
+`deploy.yml` on push to `uat` (not `main`): `build → deploy-uat → smoke-test-uat`, and stops.
 `deploy-production.yml` is `workflow_dispatch` only:
 
 ```bash

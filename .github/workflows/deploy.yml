@@ -1,6 +1,6 @@
 name: Deploy
 
-# Build once, prove it in UAT. Every push to main runs:
+# Build once, prove it in UAT. Every push to uat runs:
 #
 #   build → deploy-uat → smoke-test-uat
 #
@@ -31,7 +31,7 @@ name: Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [uat]
   workflow_dispatch: {}
 
 concurrency:
