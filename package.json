@@ -30,22 +30,22 @@
 		"@sveltejs/adapter-node": "^5.5.7",
 		"@sveltejs/kit": "^2.70.3",
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
-		"@types/node": "^26.6.4",
+		"@types/node": "^26.6.5",
 		"@types/pg": "^8.23.1",
 		"svelte": "^5.57.2",
-		"svelte-check": "^4.7.6",
+		"svelte-check": "^4.7.7",
 		"tsx": "^4.23.15",
 		"typescript": "^6.0.3",
-		"vite": "^8.3.3"
+		"vite": "^8.3.4"
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.32.1",
-		"@prisma/adapter-pg": "^7.10.0",
-		"@prisma/client": "^7.10.0",
-		"jose": "^6.2.12",
+		"@prisma/adapter-pg": "^7.10.1",
+		"@prisma/client": "^7.10.1",
+		"jose": "^6.2.13",
 		"pg": "^8.23.1",
-		"prisma": "^7.10.0",
-		"zod": "^4.6.5"
+		"prisma": "^7.10.1",
+		"zod": "^4.6.7"
 	},
 	"description": "Template: SvelteKit + Prisma/PostgreSQL + standalone read-only MCP server (OAuth 2.1) + Terraform ECS Fargate + build-once/promote-unchanged pipeline. Run scripts/init-template.sh after generating a repo from it."
 }
